@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حل کننده معادله درجه دوم</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --bg:#070b18;
+    --card:#111528;
+    --card2:#14192d;
+    --border:rgba(255,255,255,.08);
+    --text:#ffffff;
+    --muted:#7b80ff;
+    --green:#00ff88;
+    --red:#ff4a4a;
+    --yellow:#ffbb00;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Vazirmatn',sans-serif;
+    background: radial-gradient(circle at top,#101530 0%,#070b18 45%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px 20px;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* استایل حباب‌ها */
+.bubble-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* بالاتر از پس‌زمینه اصلی، پایین‌تر از فرم */
+    pointer-events: none; /* اجازه می‌دهد کلیک‌ها به حباب‌های فرزند برسند */
+}
+
+.bubble {
+    position: absolute;
+    bottom: -100px;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15), rgba(123, 128, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2), 0 0 15px rgba(123, 128, 255, 0.1);
+    cursor: pointer;
+    pointer-events: auto; /* فعال کردن قابلیت کلیک روی خود حباب */
+    animation: floatUp linear infinite;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.bubble:hover {
+    border-color: var(--green);
+    box-shadow: inset 0 0 15px rgba(0, 255, 136, 0.3), 0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+.bubble.pop {
+    transform: scale(1.4);
+    opacity: 0 !important;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(-50vh) translateX(20px);
+    }
+    100% {
+        transform: translateY(-115vh) translateX(-10px);
+    }
+}
+
+.container{
+    width:100%;
+    max-width:900px;
+    position: relative;
+    z-index: 2; /* قرار گرفتن فرم بالاتر از حباب‌ها */
+}
+
+.small-title{
+    text-align:center;
+    color:var(--muted);
+    margin-bottom:18px;
+    font-size:14px;
+}
+
+h1{
+    text-align:center;
+    font-size:54px;
+    margin-bottom:15px;
+}
+
+.subtitle{
+    text-align:center;
+    color:var(--muted);
+    font-size:24px;
+    margin-bottom:50px;
+}
+
+.glass{
+    background:rgba(17,21,40,.9);
+    border:1px solid var(--border);
+    backdrop-filter:blur(20px);
+    border-radius:28px;
+}
+
+.inputs{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    padding:32px;
+}
+
+.input-box{
+    background:#181d33;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:18px;
+    padding:18px;
+    text-align:center;
+}
+
+.label{
+    color:var(--muted);
+    margin-bottom:10px;
+    font-size:15px;
+}
+
+.input-row{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+}
+
+.input-row span{
+    color:#b8bcff;
+    font-size:24px;
+}
+
+input{
+    width:100%;
+    background:none;
+    border:none;
+    color:white;
+    text-align:center;
+    font-size:34px;
+    font-family:inherit;
+    outline:none;
+}
+
+.equation{
+    text-align:center;
+    margin:38px 0;
+    color:#a7adff;
+    font-size:32px;
+    letter-spacing:2px;
+}
+
+.result{
+    margin-top:20px;
+    padding:35px;
+    border-radius:28px;
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    border:1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.result.has-roots {
+    background: linear-gradient(180deg, rgba(0,255,136,.07), rgba(0,255,136,.03));
+    border:1px solid rgba(0,255,136,.25);
+    box-shadow: 0 0 30px rgba(0,255,136,.08);
+}
+.result.no-roots {
+    background: linear-gradient(180deg, rgba(255,74,74,.07), rgba(255,74,74,.03));
+    border:1px solid rgba(255,74,74,.25);
+    box-shadow: 0 0 30px rgba(255,74,74,.08);
+}
+
+.result-title{
+    text-align:center;
+    color:var(--green);
+    margin-bottom:25px;
+    font-size:20px;
+    font-weight: bold;
+}
+
+.answers{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+}
+
+.answer-card{
+    background:#181d33;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.05);
+    padding:25px;
+    text-align:center;
+}
+
+.answer-card h3{
+    color:var(--green);
+    margin-bottom:12px;
+}
+
+.answer-card div{
+    font-size:42px;
+    font-weight:700;
+}
+
+.extra{
+    margin-top:25px;
+    display:flex;
+    justify-content:space-between;
+    color:#8890ff;
+    font-size:18px;
+}
+
+.formula{
+    margin-top:40px;
+    text-align:center;
+    color:#5660c9;
+    font-size:22px;
+}
+
+@media(max-width:768px){
+    h1{ font-size:38px; }
+    .subtitle{ font-size:18px; }
+    .inputs{ grid-template-columns:1fr; }
+    .answers{ grid-template-columns:1fr; }
+    .extra{ flex-direction:column; gap:10px; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<div class="bubble-container" id="bubbleContainer"></div>
+
+<div class="container">
+    <div class="small-title">حل‌کننده</div>
+    <h1>معادله درجه دوم</h1>
+    <div class="subtitle">ax² + bx + c = 0</div>
+
+    <div class="glass inputs">
+        <div class="input-box">
+            <div class="label">عدد ثابت</div>
+            <div class="input-row">
+                <span>c=</span>
+                <input id="c" value="2" type="number">
+            </div>
+        </div>
+
+        <div class="input-box">
+            <div class="label">ضریب X</div>
+            <div class="input-row">
+                <span>b=</span>
+                <input id="b" value="-3" type="number">
+            </div>
+        </div>
+
+        <div class="input-box">
+            <div class="label">ضریب x²</div>
+            <div class="input-row">
+                <span>a=</span>
+                <input id="a" value="1" type="number">
+            </div>
+        </div>
+    </div>
+
+    <div class="equation" id="equation"></div>
+
+    <div class="result" id="resultCard">
+        <div class="result-title" id="resultTitle">دو جواب متمایز</div>
+
+        <div class="answers">
+            <div class="answer-card">
+                <h3 id="h_x1">x₁</h3>
+                <div id="x1">2</div>
+            </div>
+
+            <div class="answer-card">
+                <h3 id="h_x2">x₂</h3>
+                <div id="x2">1</div>
+            </div>
+        </div>
+
+        <div class="extra">
+            <span id="delta">Δ = 1</span>
+            <span id="sum">x₁ + x₂ = 3</span>
+            <span id="mul">x₁ × x₂ = 2</span>
+        </div>
+    </div>
+
+    <div class="formula">
+        x = (-b ± √Δ) / 2a &nbsp;&nbsp;&nbsp; Δ = b² - 4ac
+    </div>
+</div>
+
+<script>
+// --- بخش مربوط به منطق ریاضی ریاضی (کد قبلی شما) ---
+const a = document.getElementById("a");
+const b = document.getElementById("b");
+const c = document.getElementById("c");
+const equation = document.getElementById("equation");
+const resultCard = document.getElementById("resultCard");
+const resultTitle = document.getElementById("resultTitle");
+const x1 = document.getElementById("x1");
+const x2 = document.getElementById("x2");
+const h_x1 = document.getElementById("h_x1");
+const h_x2 = document.getElementById("h_x2");
+const delta = document.getElementById("delta");
+const sum = document.getElementById("sum");
+const mul = document.getElementById("mul");
+
+function formatEquation(av, bv, cv) {
+    let partA = av !== 0 ? `${av}x²` : '';
+    let partB = '';
+    if (bv !== 0) {
+        partB = bv > 0 ? (partA ? ` + ${bv}x` : `${bv}x`) : ` - ${Math.abs(bv)}x`;
+    }
+    let partC = '';
+    if (cv !== 0) {
+        partC = cv > 0 ? (partA || partB ? ` + ${cv}` : `${cv}`) : ` - ${Math.abs(cv)}`;
+    }
+    if (!partA && !partB && !partC) return "0 = 0";
+    return `${partA}${partB}${partC} = 0`;
+}
+
+function solve(){
+    let av = parseFloat(a.value) || 0;
+    let bv = parseFloat(b.value) || 0;
+    let cv = parseFloat(c.value) || 0;
+
+    equation.textContent = formatEquation(av, bv, cv);
+
+    if(av === 0){
+        delta.textContent = "Δ = تعریف نشده";
+        resultCard.className = "result has-roots";
+        resultTitle.style.color = "var(--yellow)";
+        h_x1.textContent = "x";
+        h_x2.textContent = "-";
+        
+        if(bv !== 0){
+            resultTitle.textContent = "معادله درجه اول (خطی)";
+            let r = -cv / bv;
+            x1.textContent = Number(r.toFixed(4));
+            x2.textContent = "-";
+            sum.textContent = "S = ندارد";
+            mul.textContent = "P = ندارد";
+        } else {
+            resultTitle.textContent = cv === 0 ? "بیشمار جواب (همانندی)" : "تناقض (فاقد جواب)";
+            x1.textContent = "-";
+            x2.textContent = "-";
+            sum.textContent = "S = -";
+            mul.textContent = "P = -";
+            if(cv !== 0) resultCard.className = "result no-roots";
+        }
+        return;
+    }
+
+    h_x1.textContent = "x₁";
+    h_x2.textContent = "x₂";
+    let d = (bv * bv) - (4 * av * cv);
+    delta.textContent = `Δ = ${d}`;
+
+    if(d < 0){
+        resultCard.className = "result no-roots";
+        resultTitle.textContent = "فاقد ریشه حقیقی";
+        resultTitle.style.color = "var(--red)";
+        x1.textContent = "هیچ";
+        x2.textContent = "هیچ";
+        sum.textContent = `x₁ + x₂ = ${( -bv / av ).toFixed(4)}`;
+        mul.textContent = `x₁ × x₂ = ${( cv / av ).toFixed(4)}`;
+        return;
+    }
+
+    resultCard.className = "result has-roots";
+    resultTitle.style.color = "var(--green)";
+
+    let r1 = (-bv + Math.sqrt(d)) / (2 * av);
+    let r2 = (-bv - Math.sqrt(d)) / (2 * av);
+
+    x1.textContent = Number(r1.toFixed(4));
+    x2.textContent = Number(r2.toFixed(4));
+
+    if(d === 0){
+        resultTitle.textContent = "یک ریشه مضاعف";
+    } else {
+        resultTitle.textContent = "دو جواب متمایز";
+    }
+    sum.textContent = `x₁ + x₂ = ${(r1 + r2).toFixed(4)}`;
+    mul.textContent = `x₁ × x₂ = ${(r1 * r2).toFixed(4)}`;
+}
+
+[a,b,c].forEach(el => el.addEventListener("input", solve));
+solve();
+
+
+// --- بخش جدید: ساخت و انیمیشن حباب‌ها ---
+const container = document.getElementById('bubbleContainer');
+const bubbleCount = 15; // تعداد حباب‌های همزمان در صفحه
+
+function createBubble() {
+    const bubble = document.createElement('div');
+    bubble.classList.add('bubble');
+    
+    // مشخصات تصادفی برای هر حباب
+    const size = Math.random() * 60 + 20; // بین ۲۰ تا ۸۰ پیکسل
+    const left = Math.random() * 100; // مکان افقی تصادفی
+    const duration = Math.random() * 8 + 6; // سرعت حرکت بین ۶ تا ۱۴ ثانیه
+    const delay = Math.random() * 5; // تاخیر اولیه تصادفی
+    const opacity = Math.random() * 0.4 + 0.2; // میزان شفافیت بین 0.2 تا 0.6
+    
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `${left}%`;
+    bubble.style.animationDuration = `${duration}s`;
+    bubble.style.animationDelay = `${delay}s`;
+    bubble.style.opacity = opacity;
+    
+    // رویداد کلیک برای ترکیدن حباب
+    bubble.addEventListener('click', () => {
+        bubble.classList.add('pop');
+        // پس از اتمام انیمیشن ترکیدن، حباب حذف و حباب جدیدی ساخته می‌شود
+        setTimeout(() => {
+            bubble.remove();
+            createBubble();
+        }, 100);
+    });
+    
+    // وقتی حباب به سقف رسید و انیمیشن تمام شد، حذف شده و حباب جدید جایگزین می‌شود
+    bubble.addEventListener('animationiteration', () => {
+        bubble.remove();
+        createBubble();
+    });
+    
+    container.appendChild(bubble);
+}
+
+// ایجاد حباب‌های اولیه هنگام لود شدن صفحه
+for (let i = 0; i < bubbleCount; i++) {
+    setTimeout(createBubble, i * 300); // ایجاد با کمی فاصله برای پخش شدن متوازن
+}
+</script>
+
+</body>
+</html>
